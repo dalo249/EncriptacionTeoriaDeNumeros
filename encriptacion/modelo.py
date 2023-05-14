@@ -31,16 +31,31 @@ class Criptografia:
         self.n: int = len(self.alfabeto)
         self.a: int = 0
         self.b: int = 0
+        self.encriptado: list[str] = list()
+        self.a_ive = 0
 
     def aleatorio(self) -> int:
-
-        numero: int
-        numero = random.randint(9999999999, 99999999999999)
+        numero: int = random.randint(9999999999, 99999999999999)
         return numero
 
     def generar_cociente_a(self):
         a: int = self.aleatorio()
+        while self.calcular_mcd(a) is False:
+            a: int = self.aleatorio()
+            self.calcular_mcd(a)
         self.a = a
+
+    def calcular_mcd(self, a: int) -> bool:
+        x: int = self.n
+        y: int = a % self.n
+        while y != 0:
+            mcd: int = y
+            y = x % y
+            x = mcd
+        if x == 1:
+            return True
+        else:
+            return False
 
     def generar_independiente_b(self):
         b: int = self.aleatorio()
@@ -52,21 +67,65 @@ class Criptografia:
         y = (((self.a % self.n)*indice) + (self.b % self.n)) % self.n
         return y
 
-    def generar_ecuacion(self,) -> str:
-
-        self.generar_cociente_a()
-        self.generar_independiente_b()
-        ecuacion: str = f"f(x) = {(self.a % 104)}*x + {(self.b  % 104)} (MOD {self.n})"
+    def mostrar_ecuacion(self) -> str:
+        ecuacion: str = f"f(x) = {(self.a % self.n)}*x + {(self.b % self.n)} (MOD {self.n} )"
         return ecuacion
 
-    def encriptar_mensaje(self, mensaje: str) -> list[str]:
-        self.generar_ecuacion()
-        mensaje_encriptado: list[str] = list()
+    def calcular_encriptacion(self, mensaje: str) -> list[str]:
+        encriptado: list[str] = list()
         for x in mensaje:
             indice: int = self.alfabeto.index(x)
             y: int = self.calcular_ecuacion(indice)
-            mensaje.append(self.hexadecimales[y])
-        return mensaje
+            encriptado.append(self.hexadecimales[y])
+        self.encriptado: list[str] = encriptado
+        return encriptado
+
+    def orden_mensaje_encriptado(self, encriptado: list[str], orden: list[int]) -> str:
+        encriptado: str = "".join(encriptado)
+        mensaje: list[str] = [str(self.a), str(self.b), encriptado]
+        mensaje_encriptado: str = mensaje[orden[0]]+"&"+mensaje[orden[1]]+"&"+mensaje[orden[2]]
+        return mensaje_encriptado
+
+    def mostrar_mensaje_encriptado(self, mensaje_encriptado: str) -> str:
+        return f" El mensaje final encriptado es: \n {mensaje_encriptado}"
+
+    def generar_ecuacion(self) -> str:
+        self.generar_cociente_a()
+        self.generar_independiente_b()
+        return self.mostrar_ecuacion()
+
+    def encriptar_mensaje(self, mensaje: str, orden: list[int]) -> str:
+        encriptado: list[str] = self.calcular_encriptacion(mensaje)
+        mensaje_encriptado: str = self.orden_mensaje_encriptado(encriptado, orden)
+        return self.mostrar_mensaje_encriptado(mensaje_encriptado)
+
+    def calcular_inverso(self, a: int) -> str:
+        if self.calcular_mcd(a):
+            a_ive = pow(a, -1, self.n)
+            self.a_ive = a_ive
+            return a_ive
+
+    def calcular_division(self, indice: int):
+        x: int
+        x = (((indice - (self.b % self.n)) * (self.a_ive % self.n)) % self.n)
+        return x
+
+    def calcular_desencriptacion(self) -> list[str]:
+        letras: list[str] = list()
+        for x in self.encriptado:
+            indice: int = self.hexadecimales.index(x)
+            y: int = self.calcular_division(indice)
+            letra: str = self.alfabeto[y]
+            letras.append(letra)
+        return letras
+
+    def mostrar_palabra(self, letras: list[str]) -> str:
+        palabra: str = "".join(letras)
+        return palabra
+
+    def desencriptar_mensaje(self) -> str:
+        letras: list[str] = self.calcular_desencriptacion()
+        return self.mostrar_palabra(letras)
 
 
 
@@ -79,8 +138,9 @@ class Criptografia:
 
 
 
-c =Criptografia()
-print(c.encriptar_mensaje("carro"))
-print(30 % 104)
-#f(x) = ((a*x + b)%self.n)"
+
+
+
+
+
 
